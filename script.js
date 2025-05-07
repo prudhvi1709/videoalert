@@ -122,6 +122,7 @@ async function analyzeCurrentFrame() {
         4. Unattended patients: Patients visibly in distress or waiting too long
         5. Aggressive behavior: Arguments, physical altercations or threatening postures
         6. PPE/mask violations: Staff or patients without required protective equipment
+        7. For every frame, detect the number of people in the frame and report the count.
         
         If NONE of these issues are detected, respond with "NORMAL". 
         If any issues ARE detected, briefly describe ONLY the specific issue(s).`;
