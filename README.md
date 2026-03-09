@@ -2,6 +2,8 @@
 
 This project is an automated anomaly detection system using AI for hospital surveillance videos. It analyzes video footage to identify predefined abnormal conditions and alerts the user.
 
+**THIS IS A DEMO. CONTAINS NO CONFIDENTIAL DATA/IP**
+
 ## Features
 
 *   **Video Upload:** Users can upload video files for analysis.
@@ -44,5 +46,4 @@ This project is an automated anomaly detection system using AI for hospital surv
 *   CSS3 (Bootstrap 5)
 *   JavaScript (Vanilla)
 *   Gemini AI (for image analysis)
-
 
