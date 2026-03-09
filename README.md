@@ -47,3 +47,6 @@ This project is an automated anomaly detection system using AI for hospital surv
 *   JavaScript (Vanilla)
 *   Gemini AI (for image analysis)
 
+
+---
+> **This is Demo. contains no confidential data/IP**
