@@ -3,115 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospital Video Analytics</title>
-    <link rel="icon" href="https://raw.githubusercontent.com/gramener/assets/main/straive-favicon.svg">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
-        .spinner-border {
-            display: none;
-        }
-        .narrative {
-            max-width: 40rem;
-        }
-        #summaryOutput {
-            height: 400px; 
-            overflow-y: auto;
-        }
-    </style>
+    <meta name="theme-color" content="#f3f7f6">
+    <meta name="description" content="Review hospital video with AI-assisted observations for human review.">
+    <title>Hospital video review</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg bg-body-tertiary" data-bs-theme="dark">
-        <div class="container-fluid">
-          <a class="navbar-brand" href=".">Hospital Video Analytics</a>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <div class="nav-item dropdown ms-auto" role="group" aria-label="Toggle dark mode" title="Toggle Dark Mode">
-              <button class="dark-theme-toggle btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Toggle theme (auto)">
-                <i class="bi bi-circle-half"></i> <span class="d-lg-none ms-2">Toggle theme</span>
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><button class="dropdown-item" data-bs-theme-value="light"><i class="me-2 bi bi-sun-fill"></i> Light</button></li>
-                <li><button class="dropdown-item" data-bs-theme-value="dark"><i class="me-2 bi bi-moon-stars-fill"></i> Dark</button></li>
-                <li><button class="dropdown-item" data-bs-theme-value="auto"><i class="me-2 bi bi-circle-half"></i> Auto</button></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-    </nav>
+    <header class="topbar">
+        <a class="brand" href="." aria-label="Hospital video review home">
+            <span class="brand-mark" aria-hidden="true"><span></span></span>
+            <span>Hospital video review</span>
+        </a>
+        <span class="demo-chip"><span class="demo-chip__dot" aria-hidden="true"></span> Demonstration</span>
+    </header>
 
-    <div class="container-fluid">
-        <h1 class="display-1 my-4 text-center">Hospital Video Analytics</h1>
-        <h2 class="display-6 text-center">Automated Anomaly Detection with AI</h2>
-        <div class="alert alert-warning text-center mt-3" role="alert">
-            THIS IS A DEMO. CONTAINS NO CONFIDENTIAL DATA/IP
-        </div>
-        
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <i class="bi bi-camera-video"></i> Video Input
-                    </div>
-                    <div class="card-body">
-                        <label for="apiToken" class="form-label">LLM Foundry token</label>
-                        <input type="password" class="form-control mb-2" id="apiToken" autocomplete="off" spellcheck="false" placeholder="Enter your LLM Foundry token">
-                        <div class="form-text mb-3">Required for AI analysis. The token stays in page memory and is cleared when you close or refresh this page. Video frames are sent to LLM Foundry for analysis; use only footage you are authorized to share.</div>
-                        <input type="file" class="form-control mb-3" id="videoInput" accept="video/*">
-                        <video id="videoPlayer" controls class="w-100"></video>
-                    </div>
-                </div>
-                
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <i class="bi bi-image"></i> Current Frame
-                    </div>
-                    <div class="card-body">
-                        <canvas id="frameCanvas" class="w-100"></canvas>
-                        <div class="d-flex justify-content-center mt-3">
-                            <div class="spinner-border text-primary" role="status" id="loading-spinner">
-                                <span class="visually-hidden">Analyzing...</span>
-                            </div>
-                        </div>
-                        <div id="analysisStatus" class="small mt-2" role="status" aria-live="polite"></div>
-                    </div>
-                </div>
+    <main class="page-shell">
+        <section class="page-intro" aria-labelledby="page-title">
+            <div>
+                <p class="section-kicker">Video review workspace</p>
+                <h1 id="page-title">Review a hospital recording.</h1>
+                <p class="intro-copy">AI-assisted observations appear beside the video for a person to review.</p>
             </div>
-            
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="bi bi-clipboard-data"></i> Analysis Summary
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between mb-3">
-                            <button class="btn btn-primary" id="exportBtn">
-                                <i class="bi bi-download"></i> Export Analysis
-                            </button>
-                            <button class="btn btn-danger" id="clearBtn">
-                                <i class="bi bi-trash"></i> Clear Results
-                            </button>
-                        </div>
-                        <div id="summaryOutput" class="border rounded p-3">
-                            <p class="text-muted">Analysis results will appear here...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+            <aside class="demo-notice" role="note">
+                <span class="demo-notice__icon" aria-hidden="true">i</span>
+                <span><strong>Demo environment</strong> Use non-confidential footage that you are authorized to share.</span>
+            </aside>
+        </section>
 
-    <footer class="my-5 vh-100 d-flex align-items-center justify-content-center">
-        <h1 class="display-4">Designed by <a href="https://gramener.com/" class="text-reset link-offset-3 link-underline link-underline-opacity-25">Gramener</a></h1>
+        <section class="workspace" aria-label="Video analysis workspace">
+            <div class="workspace-main">
+                <section class="panel video-panel" aria-labelledby="video-heading">
+                    <div class="panel-heading">
+                        <div>
+                            <h2 id="video-heading">Video source</h2>
+                            <p>Choose a recording to begin review.</p>
+                        </div>
+                        <span class="local-badge">AI review on motion</span>
+                    </div>
+
+                    <div class="source-controls">
+                        <div class="field-group">
+                            <label for="videoInput">Choose a video</label>
+                            <input type="file" id="videoInput" accept="video/*">
+                        </div>
+                        <div class="field-group token-group">
+                            <label for="apiToken">LLM Foundry token</label>
+                            <input type="password" id="apiToken" autocomplete="off" spellcheck="false" placeholder="Enter token to enable AI review">
+                            <p class="field-help">Kept in page memory and cleared when this page closes or refreshes. Video frames are sent to LLM Foundry.</p>
+                        </div>
+                    </div>
+
+                    <div class="video-stage">
+                        <video id="videoPlayer" playsinline aria-label="Selected hospital video" hidden></video>
+                        <div class="video-placeholder" id="videoPlaceholder">
+                            <span class="placeholder-mark" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false"><path d="M8 5.5v13l10-6.5-10-6.5Z" /></svg>
+                            </span>
+                            <strong>Your recording will appear here</strong>
+                            <span>Choose a video above, then play it to review.</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel frame-panel" aria-labelledby="frame-heading">
+                    <div class="panel-heading panel-heading--compact">
+                        <div>
+                            <h2 id="frame-heading">Frame under review</h2>
+                            <p>Latest frame sent for analysis</p>
+                        </div>
+                        <div class="analysis-indicator" aria-live="polite">
+                            <span class="spinner-border" role="status" id="loading-spinner"><span class="visually-hidden">Analyzing...</span></span>
+                            <span id="analysisStatus" class="status-copy" role="status"></span>
+                        </div>
+                    </div>
+                    <div class="frame-stage">
+                        <canvas id="frameCanvas" aria-label="Latest frame analyzed"></canvas>
+                        <span class="frame-empty" id="framePlaceholder">A frame will appear when playback begins.</span>
+                    </div>
+                </section>
+            </div>
+
+            <section class="panel findings-panel" aria-labelledby="findings-heading">
+                <div class="panel-heading findings-heading">
+                    <div>
+                        <h2 id="findings-heading">Review findings</h2>
+                        <p>Flagged moments from the recording</p>
+                    </div>
+                    <span class="findings-count" id="findingsCount" aria-live="polite">0</span>
+                </div>
+                <div class="findings-actions">
+                    <button class="button button-primary" id="exportBtn" type="button">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3" /></svg>
+                        Export findings
+                    </button>
+                    <button class="button button-quiet" id="clearBtn" type="button">Clear</button>
+                </div>
+                <div id="summaryOutput" class="findings-list" aria-live="polite" aria-relevant="additions text">
+                    <div class="empty-state">
+                        <span class="empty-state__mark" aria-hidden="true"></span>
+                        <strong>No findings yet</strong>
+                        <span>Flagged moments will appear here as the video plays.</span>
+                    </div>
+                </div>
+                <p class="findings-footnote">Observations may be incomplete or incorrect. Review the video before taking action.</p>
+            </section>
+        </section>
+    </main>
+
+    <footer class="page-footer">
+        <span>AI-assisted video review demonstration</span>
+        <span>Not for clinical decisions</span>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@gramex/ui@0.3/dist/dark-theme.js" type="module"></script>
     <script src="script.js"></script>
-
-<!-- This is Demo. contains no confidential data/IP -->
-<p style="font-size:0.8em;color:gray;text-align:center"><em>This is Demo. contains no confidential data/IP</em></p>
 </body>
-</html> 
+</html>
