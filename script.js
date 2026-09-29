@@ -1,8 +1,7 @@
 // Configuration
 const FRAME_CHECK_INTERVAL = 1000; // Check for motion every 1 second
 const MOTION_THRESHOLD = 15; // Sensitivity for motion detection (lower = more sensitive)
-// Add your Gemini API key here
-const GEMINI_API_URL = 'https://llmfoundry.straive.com/gemini/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent';
+const GEMINI_API_URL = 'https://llmfoundry.straivedemo.com/gemini/v1beta/models/gemini-3.7-flash:generateContent';
 
 // DOM Elements
 const videoInput = document.getElementById('videoInput');
@@ -12,6 +11,8 @@ const summaryOutput = document.getElementById('summaryOutput');
 const exportBtn = document.getElementById('exportBtn');
 const clearBtn = document.getElementById('clearBtn');
 const loadingSpinner = document.getElementById('loading-spinner');
+const apiTokenInput = document.getElementById('apiToken');
+const analysisStatus = document.getElementById('analysisStatus');
 
 // Canvas setup
 const ctx = frameCanvas.getContext('2d');
@@ -23,6 +24,8 @@ let frameInterval;
 let isProcessing = false;
 let analysisResults = [];
 let previousImageData = null;
+let isAnalyzing = false;
+let analysisPaused = false;
 
 // Event Listeners
 videoInput.addEventListener('change', handleVideoUpload);
@@ -31,6 +34,10 @@ videoPlayer.addEventListener('pause', stopFrameCapture);
 videoPlayer.addEventListener('ended', stopFrameCapture);
 exportBtn.addEventListener('click', exportAnalysis);
 clearBtn.addEventListener('click', clearResults);
+apiTokenInput.addEventListener('input', () => {
+    analysisPaused = false;
+    setAnalysisStatus(apiTokenInput.value.trim() ? 'Token entered. AI analysis is ready.' : '', 'muted');
+});
 
 // Handle video upload
 function handleVideoUpload(event) {
@@ -66,6 +73,14 @@ function stopFrameCapture() {
 
 // Check if there's significant motion in the frame
 function checkForMotion() {
+    if (analysisPaused) return;
+
+    if (!apiTokenInput.value.trim()) {
+        analysisPaused = true;
+        setAnalysisStatus('Enter an LLM Foundry token to start AI analysis.', 'warning');
+        return;
+    }
+
     ctx.drawImage(videoPlayer, 0, 0, frameCanvas.width, frameCanvas.height);
     const currentImageData = ctx.getImageData(0, 0, frameCanvas.width, frameCanvas.height);
     
@@ -105,6 +120,16 @@ function detectMotion(previous, current) {
 
 // Analyze current frame
 async function analyzeCurrentFrame() {
+    if (isAnalyzing || analysisPaused) return;
+
+    const apiToken = apiTokenInput.value.trim();
+    if (!apiToken) {
+        analysisPaused = true;
+        setAnalysisStatus('Enter an LLM Foundry token to start AI analysis.', 'warning');
+        return;
+    }
+
+    isAnalyzing = true;
     try {
         const currentTime = videoPlayer.currentTime;
         const frameData = frameCanvas.toDataURL('image/jpeg', 0.8);
@@ -127,8 +152,7 @@ async function analyzeCurrentFrame() {
         If NONE of these issues are detected, respond with "NORMAL". 
         If any issues ARE detected, briefly describe ONLY the specific issue(s).`;
         
-        const response = await analyzeFrame(frameData, prompt);
-        console.log("Received response from LLM:", response);
+        const response = await analyzeFrame(frameData, prompt, apiToken);
         
         // Only record and display abnormal situations
         if (response.trim() !== "NORMAL") {
@@ -140,10 +164,18 @@ async function analyzeCurrentFrame() {
         // Hide loading spinner
         loadingSpinner.style.display = 'none';
     } catch (error) {
-        // Hide loading spinner in case of error
-        loadingSpinner.style.display = 'none';
         console.error('Error analyzing frame:', error);
+        analysisPaused = true;
+        setAnalysisStatus(error.message, 'danger');
+    } finally {
+        loadingSpinner.style.display = 'none';
+        isAnalyzing = false;
     }
+}
+
+function setAnalysisStatus(message, tone) {
+    analysisStatus.textContent = message;
+    analysisStatus.className = message ? `small mt-2 text-${tone}` : 'small mt-2';
 }
 
 // Format time in MM:SS format
@@ -157,7 +189,9 @@ function formatTime(seconds) {
 function displayAnalysis(timestamp, analysis) {
     const analysisElement = document.createElement('div');
     analysisElement.className = 'alert alert-warning mb-2';
-    analysisElement.innerHTML = `<strong><i class="bi bi-exclamation-triangle"></i> ALERT [${timestamp}]</strong> - ${analysis}`;
+    const heading = document.createElement('strong');
+    heading.textContent = `ALERT [${timestamp}]`;
+    analysisElement.append(heading, document.createTextNode(` - ${analysis}`));
     summaryOutput.insertBefore(analysisElement, summaryOutput.firstChild);
 }
 
@@ -190,20 +224,18 @@ function clearResults() {
 }
 
 // Call Gemini API
-async function analyzeFrame(frameData, prompt) {
+async function analyzeFrame(frameData, prompt, apiToken) {
     try {
         console.log("Preparing API request to Gemini...");
         
-        // Log the first 50 chars of base64 data to verify content
         const base64Data = frameData.split(',')[1];
-        console.log("Frame data sample:", base64Data.substring(0, 50) + "...");
         
         const response = await fetch(GEMINI_API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiToken}`,
             },
-            credentials: 'include',
             body: JSON.stringify({
                 contents: [{
                     parts: [{
@@ -218,16 +250,17 @@ async function analyzeFrame(frameData, prompt) {
             })
         });
 
-        console.log("API response status:", response.status);
-        
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error("API error response:", errorText);
-            throw new Error(`API request failed with status ${response.status}`);
+            if (response.status === 401) {
+                throw new Error('Authentication failed. Check the LLM Foundry token and try again.');
+            }
+            if (response.status === 403) {
+                throw new Error('This token is not allowed to use the configured Gemini model.');
+            }
+            throw new Error(`AI analysis request failed (HTTP ${response.status}). Check the endpoint and try again.`);
         }
 
         const data = await response.json();
-        console.log("API response received:", data);
         
         if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
             console.error("Unexpected API response format:", data);
