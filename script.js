@@ -13,6 +13,9 @@ const clearBtn = document.getElementById('clearBtn');
 const loadingSpinner = document.getElementById('loading-spinner');
 const apiTokenInput = document.getElementById('apiToken');
 const analysisStatus = document.getElementById('analysisStatus');
+const videoPlaceholder = document.getElementById('videoPlaceholder');
+const framePlaceholder = document.getElementById('framePlaceholder');
+const findingsCount = document.getElementById('findingsCount');
 
 // Canvas setup
 const ctx = frameCanvas.getContext('2d');
@@ -32,8 +35,13 @@ videoInput.addEventListener('change', handleVideoUpload);
 videoPlayer.addEventListener('play', startFrameCapture);
 videoPlayer.addEventListener('pause', stopFrameCapture);
 videoPlayer.addEventListener('ended', stopFrameCapture);
+videoPlayer.addEventListener('loadeddata', () => {
+    videoPlayer.hidden = false;
+    videoPlaceholder.hidden = true;
+});
 exportBtn.addEventListener('click', exportAnalysis);
 clearBtn.addEventListener('click', clearResults);
+updateFindingsCount();
 apiTokenInput.addEventListener('input', () => {
     analysisPaused = false;
     setAnalysisStatus(apiTokenInput.value.trim() ? 'Token entered. AI analysis is ready.' : '', 'muted');
@@ -45,8 +53,13 @@ function handleVideoUpload(event) {
     if (file) {
         const videoURL = URL.createObjectURL(file);
         videoPlayer.src = videoURL;
-        summaryOutput.innerHTML = '<p class="text-muted">Waiting for abnormal events to be detected...</p>';
+        videoPlayer.hidden = true;
+        videoPlayer.controls = true;
+        videoPlaceholder.hidden = false;
+        framePlaceholder.hidden = false;
+        showEmptyState('No findings yet', 'Flagged moments will appear here as the video plays.');
         analysisResults = [];
+        updateFindingsCount();
         previousImageData = null;
         
         videoPlayer.onloadedmetadata = function() {
@@ -82,6 +95,7 @@ function checkForMotion() {
     }
 
     ctx.drawImage(videoPlayer, 0, 0, frameCanvas.width, frameCanvas.height);
+    framePlaceholder.hidden = true;
     const currentImageData = ctx.getImageData(0, 0, frameCanvas.width, frameCanvas.height);
     
     if (previousImageData) {
@@ -158,6 +172,7 @@ async function analyzeCurrentFrame() {
         if (response.trim() !== "NORMAL") {
             const result = { timestamp, analysis: response };
             analysisResults.push(result);
+            updateFindingsCount();
             displayAnalysis(timestamp, response);
         }
         
@@ -175,7 +190,31 @@ async function analyzeCurrentFrame() {
 
 function setAnalysisStatus(message, tone) {
     analysisStatus.textContent = message;
-    analysisStatus.className = message ? `small mt-2 text-${tone}` : 'small mt-2';
+    analysisStatus.className = message ? `status-copy status-copy--${tone}` : 'status-copy';
+}
+
+function showEmptyState(title, message) {
+    const emptyState = document.createElement('div');
+    emptyState.className = 'empty-state';
+
+    const mark = document.createElement('span');
+    mark.className = 'empty-state__mark';
+    mark.setAttribute('aria-hidden', 'true');
+
+    const heading = document.createElement('strong');
+    heading.textContent = title;
+    const description = document.createElement('span');
+    description.textContent = message;
+
+    emptyState.append(mark, heading, description);
+    summaryOutput.replaceChildren(emptyState);
+}
+
+function updateFindingsCount() {
+    const count = analysisResults.length;
+    findingsCount.textContent = String(count);
+    exportBtn.disabled = count === 0;
+    clearBtn.disabled = count === 0;
 }
 
 // Format time in MM:SS format
@@ -187,11 +226,17 @@ function formatTime(seconds) {
 
 // Display analysis result
 function displayAnalysis(timestamp, analysis) {
+    summaryOutput.querySelector('.empty-state')?.remove();
+
     const analysisElement = document.createElement('div');
-    analysisElement.className = 'alert alert-warning mb-2';
+    analysisElement.className = 'finding';
     const heading = document.createElement('strong');
-    heading.textContent = `ALERT [${timestamp}]`;
-    analysisElement.append(heading, document.createTextNode(` - ${analysis}`));
+    heading.className = 'finding__time';
+    heading.textContent = timestamp;
+    const detail = document.createElement('p');
+    detail.className = 'finding__detail';
+    detail.textContent = analysis.replaceAll('**', '').trim();
+    analysisElement.append(heading, detail);
     summaryOutput.insertBefore(analysisElement, summaryOutput.firstChild);
 }
 
@@ -220,7 +265,8 @@ function exportAnalysis() {
 // Clear results
 function clearResults() {
     analysisResults = [];
-    summaryOutput.innerHTML = '<p class="text-muted">Waiting for abnormal events to be detected...</p>';
+    updateFindingsCount();
+    showEmptyState('No findings yet', 'Flagged moments will appear here as the video plays.');
 }
 
 // Call Gemini API
