@@ -56,6 +56,9 @@
                         <i class="bi bi-camera-video"></i> Video Input
                     </div>
                     <div class="card-body">
+                        <label for="apiToken" class="form-label">LLM Foundry token</label>
+                        <input type="password" class="form-control mb-2" id="apiToken" autocomplete="off" spellcheck="false" placeholder="Enter your LLM Foundry token">
+                        <div class="form-text mb-3">Required for AI analysis. The token stays in page memory and is cleared when you close or refresh this page. Video frames are sent to LLM Foundry for analysis; use only footage you are authorized to share.</div>
                         <input type="file" class="form-control mb-3" id="videoInput" accept="video/*">
                         <video id="videoPlayer" controls class="w-100"></video>
                     </div>
@@ -72,6 +75,7 @@
                                 <span class="visually-hidden">Analyzing...</span>
                             </div>
                         </div>
+                        <div id="analysisStatus" class="small mt-2" role="status" aria-live="polite"></div>
                     </div>
                 </div>
             </div>

@@ -26,7 +26,7 @@ This project is an automated anomaly detection system using AI for hospital surv
 2.  The video plays, and `script.js` captures frames at a regular interval (`FRAME_CHECK_INTERVAL`).
 3.  A basic motion detection algorithm compares consecutive frames.
 4.  If motion exceeding a `MOTION_THRESHOLD` is detected, the current frame is captured from a canvas element.
-5.  This frame is converted to a base64 JPEG image and sent to the Gemini API (`GEMINI_API_URL`) along with a specific prompt detailing the abnormal conditions to look for.
+5.  This frame is converted to a base64 JPEG image and sent to Gemini 3.7 Flash through LLM Foundry at `llmfoundry.straivedemo.com`, with a specific prompt detailing the abnormal conditions to look for. The request uses the LLM Foundry token entered in the page as a bearer token.
 6.  If the API response indicates an abnormal condition (i.e., not "NORMAL"), the timestamp and the AI's analysis are displayed on the page.
 7.  All detected alerts can be exported.
 
@@ -34,11 +34,7 @@ This project is an automated anomaly detection system using AI for hospital surv
 
 1.  Clone this repository.
 2.  Open `index.html` in a web browser.
-3.  **Important:** You need to configure the Gemini API endpoint. In `script.js`, update the `GEMINI_API_URL` constant with your valid Gemini API endpoint:
-    ```javascript
-    const GEMINI_API_URL = 'YOUR_GEMINI_API_ENDPOINT_HERE';
-    ```
-    The current placeholder is `https://llmfoundry.straive.com/gemini/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent`. Ensure this is correctly set up for API calls, including any necessary authentication or API keys if required by your specific endpoint. The script currently uses `credentials: 'include'` which might be relevant for your setup.
+3.  Enter your LLM Foundry token in the page before playing the video. The token is kept only in page memory and is cleared when the page is refreshed or closed. Do not use confidential footage: frames with motion are sent to Gemini 3.7 Flash through `llmfoundry.straivedemo.com` for analysis.
 
 ## Technologies Used
 
@@ -46,7 +42,3 @@ This project is an automated anomaly detection system using AI for hospital surv
 *   CSS3 (Bootstrap 5)
 *   JavaScript (Vanilla)
 *   Gemini AI (for image analysis)
-
-
----
-> **This is Demo. contains no confidential data/IP**
